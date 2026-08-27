@@ -1,0 +1,11 @@
+# Install with:  pip install -r requirements.txt
+# NOTE: for GPU training, the gaming-laptop person should install torch from
+# https://pytorch.org (pick their CUDA version) INSTEAD of the plain torch below.
+torch
+torchvision
+pillow
+numpy
+matplotlib
+tqdm
+scikit-learn
+gradio

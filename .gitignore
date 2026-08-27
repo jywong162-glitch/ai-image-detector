@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# Data & model artifacts (too big / not source) — teammates download/produce these
+data/
+*.pth
+predictions.json
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
