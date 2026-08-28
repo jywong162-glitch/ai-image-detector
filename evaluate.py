@@ -15,7 +15,7 @@ from model import load_model
 
 
 def accuracy_under(model, device, corruption):
-    ds = ImageFolderDataset(config.TEST_DIR, eval_transform(corruption))
+    ds = ImageFolderDataset(config.TEST_DIRS, eval_transform(corruption))
     dl = DataLoader(ds, batch_size=config.BATCH_SIZE, shuffle=False, num_workers=config.get_num_workers())
     correct = total = 0
     with torch.no_grad():

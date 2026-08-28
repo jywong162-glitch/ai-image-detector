@@ -117,16 +117,20 @@ def get_corruptions():
 
 # ---------- Dataset ----------
 class ImageFolderDataset(Dataset):
-    def __init__(self, root, transform):
+    def __init__(self, roots, transform):
+        """roots: one folder (str) or several (list) to combine multiple datasets."""
+        if isinstance(roots, str):
+            roots = [roots]
         self.samples, self.transform = [], transform
-        for label, name in enumerate(config.CLASS_NAMES):     # real=0, fake=1
-            folder = os.path.join(root, name)
-            if not os.path.isdir(folder):                     # accept REAL/FAKE too
-                folder = os.path.join(root, name.upper())
-            for path in glob.glob(os.path.join(folder, "*")):
-                self.samples.append((path, label))
+        for root in roots:
+            for label, name in enumerate(config.CLASS_NAMES):  # real=0, fake=1
+                folder = os.path.join(root, name)
+                if not os.path.isdir(folder):                  # accept REAL/FAKE too
+                    folder = os.path.join(root, name.upper())
+                for path in glob.glob(os.path.join(folder, "*")):
+                    self.samples.append((path, label))
         if not self.samples:
-            print(f"[data] WARNING: no images found under {root} — download the dataset first.")
+            print(f"[data] WARNING: no images found under {roots} — download the dataset first.")
 
     def __len__(self):
         return len(self.samples)
@@ -138,8 +142,8 @@ class ImageFolderDataset(Dataset):
 
 
 def get_dataloaders():
-    train_ds = ImageFolderDataset(config.TRAIN_DIR, train_transform())
-    test_ds  = ImageFolderDataset(config.TEST_DIR,  eval_transform())
+    train_ds = ImageFolderDataset(config.TRAIN_DIRS, train_transform())
+    test_ds  = ImageFolderDataset(config.TEST_DIRS,  eval_transform())
     nw, pin = config.get_num_workers(), config.use_pin_memory()
     train_dl = DataLoader(train_ds, batch_size=config.BATCH_SIZE, shuffle=True,  num_workers=nw, pin_memory=pin)
     test_dl  = DataLoader(test_ds,  batch_size=config.BATCH_SIZE, shuffle=False, num_workers=nw, pin_memory=pin)
@@ -147,7 +151,8 @@ def get_dataloaders():
 
 
 if __name__ == "__main__":
-    tr = ImageFolderDataset(config.TRAIN_DIR, train_transform())
-    te = ImageFolderDataset(config.TEST_DIR, eval_transform())
+    tr = ImageFolderDataset(config.TRAIN_DIRS, train_transform())
+    te = ImageFolderDataset(config.TEST_DIRS, eval_transform())
+    print(f"datasets: {config.DATA_ROOTS}")
     print(f"train images: {len(tr)}  |  test images: {len(te)}")
     print("corruptions available:", list(get_corruptions().keys()))

@@ -4,9 +4,26 @@ import os
 BASE = os.path.dirname(os.path.abspath(__file__))
 
 # --- Data layout (Person 2 fills these folders) ---
-DATA_DIR  = os.path.join(BASE, "data")
-TRAIN_DIR = os.path.join(DATA_DIR, "train")   # has real/ and fake/ subfolders
-TEST_DIR  = os.path.join(DATA_DIR, "test")    # has real/ and fake/ subfolders
+# Train on ONE or MANY datasets. Each dataset root must contain train/ and test/,
+# and each of those a real/ (or REAL/) and fake/ (or FAKE/) subfolder.
+# Combine datasets for better generalization (comma-separated, no spaces needed):
+#   DATA_ROOTS="data,data_sid,data_wildfake" python train.py
+def _roots():
+    out = []
+    for r in os.environ.get("DATA_ROOTS", "data").split(","):
+        r = r.strip()
+        if r:
+            out.append(r if os.path.isabs(r) else os.path.join(BASE, r))
+    return out
+
+DATA_ROOTS = _roots()
+TRAIN_DIRS = [os.path.join(r, "train") for r in DATA_ROOTS]
+TEST_DIRS  = [os.path.join(r, "test")  for r in DATA_ROOTS]
+
+# Back-compat single-folder aliases (first dataset)
+DATA_DIR  = DATA_ROOTS[0]
+TRAIN_DIR = TRAIN_DIRS[0]
+TEST_DIR  = TEST_DIRS[0]
 
 # --- Model file (Person 1 produces this) ---
 MODEL_PATH = os.path.join(BASE, "model.pth")
