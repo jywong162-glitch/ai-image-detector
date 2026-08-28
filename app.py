@@ -38,8 +38,10 @@ def predict(image):
     return labels, heatmap_img, btn
 
 
-def flag_as_ai():
-    # Turn the button RED when the user clicks it.
+def toggle_flag(current_label):
+    # Toggle each click: normal (gray) <-> flagged (red).
+    if current_label == FLAG_RED:
+        return gr.update(value=FLAG_DEFAULT, variant="secondary")
     return gr.update(value=FLAG_RED, variant="stop")
 
 
@@ -59,7 +61,7 @@ with gr.Blocks(title="AI-Generated Image Detector") as demo:
             flag_btn = gr.Button(FLAG_DEFAULT, variant="secondary")
 
     analyze.click(predict, inputs=inp, outputs=[out_label, out_heat, flag_btn])
-    flag_btn.click(flag_as_ai, outputs=flag_btn)
+    flag_btn.click(toggle_flag, inputs=flag_btn, outputs=flag_btn)
 
 
 if __name__ == "__main__":
