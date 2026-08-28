@@ -50,7 +50,8 @@ demo = gr.Interface(
         gr.Image(type="pil", label="Grad-CAM Heatmap")
     ],
     title="AI-Generated Image Detector",
-    description="Upload an image. The model estimates whether it's real or fake and highlights relevant regions."
+    description="Upload an image. The model estimates whether it's real or fake and highlights relevant regions.",
+    flagging_mode="never",
 )
 
 if __name__ == "__main__":
