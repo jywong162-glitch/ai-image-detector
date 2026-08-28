@@ -11,7 +11,7 @@ import config
 from data import eval_transform
 from model import load_model
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
+device = config.get_device()
 model = load_model(device)
 transform = eval_transform()   # clean; you can add a corruption dropdown later
 

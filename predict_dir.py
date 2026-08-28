@@ -27,7 +27,7 @@ def main():
     image_dir = sys.argv[1]
     out_path = sys.argv[2] if len(sys.argv) > 2 else "predictions.json"
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = config.get_device()
     model = load_model(device)
     transform = eval_transform()
 

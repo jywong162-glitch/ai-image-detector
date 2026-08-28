@@ -24,3 +24,14 @@ STD  = [0.229, 0.224, 0.225]
 BATCH_SIZE = 64
 EPOCHS     = 5
 LR         = 1e-4
+
+
+def get_device():
+    """Pick the best available accelerator: NVIDIA GPU > Apple Silicon GPU > CPU."""
+    import torch
+    if torch.cuda.is_available():
+        return "cuda"                      # NVIDIA GPU (gaming laptop)
+    mps = getattr(torch.backends, "mps", None)
+    if mps is not None and mps.is_available():
+        return "mps"                       # Apple Silicon GPU (M1/M2/M3/M4 Mac)
+    return "cpu"                           # no GPU (slow but works)

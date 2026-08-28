@@ -13,8 +13,8 @@ from model import build_model
 
 
 def main():
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    print(f"[train] device = {device}  (want 'cuda' for the gaming laptop)")
+    device = config.get_device()
+    print(f"[train] device = {device}  (cuda=NVIDIA, mps=Apple Silicon, cpu=no GPU)")
 
     train_dl, test_dl = get_dataloaders()
     model = build_model(pretrained=True).to(device)

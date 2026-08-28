@@ -28,7 +28,7 @@ def accuracy_under(model, device, corruption):
 
 
 def main():
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = config.get_device()
     model = load_model(device)
 
     print("\n=== ROBUSTNESS TABLE ===")
