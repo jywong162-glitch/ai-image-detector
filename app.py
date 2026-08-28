@@ -69,7 +69,7 @@ TOOLTIP_CSS = """
 }
 """
 
-with gr.Blocks(title="AI-Generated Image Detector", css=TOOLTIP_CSS) as demo:
+with gr.Blocks(title="AI-Generated Image Detector") as demo:
     gr.Markdown(
         "# AI-Generated Image Detector\n"
         "Upload an image — the model estimates **real vs AI-generated** and highlights the "
@@ -91,4 +91,4 @@ with gr.Blocks(title="AI-Generated Image Detector", css=TOOLTIP_CSS) as demo:
 
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(css=TOOLTIP_CSS)
