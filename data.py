@@ -70,7 +70,12 @@ def _blur(sigma):
 # ---------- Transforms ----------
 def train_transform():
     """Heavy random augmentation = robustness. This is the heart of the project.
-    We randomly apply the same families of corruptions the model is tested on."""
+    We randomly apply the same families of corruptions the model is tested on.
+
+    Set AUGMENT=0 to train a NO-augmentation BASELINE (for the comparison slide:
+    baseline collapses under transforms, augmented model stays flat)."""
+    if os.environ.get("AUGMENT", "1") == "0":
+        return eval_transform()          # clean only — the weak baseline
     return T.Compose([
         T.Resize((config.IMG_SIZE, config.IMG_SIZE)),
         RandomJPEG(quality_range=(30, 90), p=0.5),
