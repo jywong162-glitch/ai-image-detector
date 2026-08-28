@@ -23,11 +23,16 @@ def predict(image):
     prob_fake = float(probs[1])
     labels = {"real": float(probs[0]), "AI-generated": prob_fake}
 
-    # Threshold decision: flag as AI-generated when confidence >= THRESHOLD
+    # Threshold decision: flag as AI-generated when confidence >= THRESHOLD.
+    # Render a colored banner: RED when flagged, GREEN when real.
+    box = ("padding:14px;border-radius:10px;font-size:22px;"
+           "font-weight:700;text-align:center;border:2px solid")
     if prob_fake >= config.THRESHOLD:
-        verdict = f"🚨 FLAGGED: AI-generated  ({prob_fake:.1%} ≥ {config.THRESHOLD:.0%} threshold)"
+        verdict = (f"<div style='background:#fdecea;color:#b71c1c;{box} #b71c1c'>"
+                   f"🚨 FLAGGED: AI-generated &nbsp;({prob_fake:.1%} ≥ {config.THRESHOLD:.0%})</div>")
     else:
-        verdict = f"✅ Likely real  ({prob_fake:.1%} < {config.THRESHOLD:.0%} threshold)"
+        verdict = (f"<div style='background:#e8f5e9;color:#1b5e20;{box} #1b5e20'>"
+                   f"✅ Likely real &nbsp;({prob_fake:.1%} &lt; {config.THRESHOLD:.0%})</div>")
 
     target_layer = model.features[-1]
     cam = generate_heatmap(model, x, target_layer)
@@ -40,7 +45,7 @@ demo = gr.Interface(
     fn=predict,
     inputs=gr.Image(type="pil"),
     outputs=[
-        gr.Textbox(label="Verdict"),
+        gr.HTML(label="Verdict"),
         gr.Label(num_top_classes=2, label="Prediction"),
         gr.Image(type="pil", label="Grad-CAM Heatmap")
     ],
