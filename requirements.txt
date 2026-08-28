@@ -9,3 +9,4 @@ matplotlib
 tqdm
 scikit-learn
 gradio
+opencv-python-headless
