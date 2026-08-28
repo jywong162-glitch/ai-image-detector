@@ -20,19 +20,27 @@ def predict(image):
     x = transform(image.convert("RGB")).unsqueeze(0).to(device)
     with torch.no_grad():
         probs = torch.softmax(model(x), dim=1)[0]
-    labels = {"real": float(probs[0]), "AI-generated": float(probs[1])}
+    prob_fake = float(probs[1])
+    labels = {"real": float(probs[0]), "AI-generated": prob_fake}
+
+    # Threshold decision: flag as AI-generated when confidence >= THRESHOLD
+    if prob_fake >= config.THRESHOLD:
+        verdict = f"🚨 FLAGGED: AI-generated  ({prob_fake:.1%} ≥ {config.THRESHOLD:.0%} threshold)"
+    else:
+        verdict = f"✅ Likely real  ({prob_fake:.1%} < {config.THRESHOLD:.0%} threshold)"
 
     target_layer = model.features[-1]
     cam = generate_heatmap(model, x, target_layer)
     heatmap_img = overlay_heatmap(image.convert("RGB").resize((x.shape[3], x.shape[2])), cam)
 
-    return labels, heatmap_img
+    return verdict, labels, heatmap_img
 
 
 demo = gr.Interface(
     fn=predict,
     inputs=gr.Image(type="pil"),
     outputs=[
+        gr.Textbox(label="Verdict"),
         gr.Label(num_top_classes=2, label="Prediction"),
         gr.Image(type="pil", label="Grad-CAM Heatmap")
     ],

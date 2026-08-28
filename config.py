@@ -37,6 +37,11 @@ IMG_SIZE    = 224          # pretrained models expect ~224x224
 NUM_CLASSES = 2
 CLASS_NAMES = ["real", "fake"]   # index 0 = real, 1 = fake
 
+# Decision threshold: flag an image as AI-generated when P(fake) >= THRESHOLD.
+# Lower it (e.g. 0.3) to catch more fakes at the cost of more false positives.
+#   e.g.  THRESHOLD=0.3 python app.py
+THRESHOLD = float(os.environ.get("THRESHOLD", 0.5))
+
 # ImageNet normalization — pretrained models were trained with these numbers
 MEAN = [0.485, 0.456, 0.406]
 STD  = [0.229, 0.224, 0.225]

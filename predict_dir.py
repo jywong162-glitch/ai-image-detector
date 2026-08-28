@@ -45,7 +45,8 @@ def main():
                 continue
             x = transform(img).unsqueeze(0).to(device)
             prob_fake = torch.softmax(model(x), dim=1)[0, 1].item()  # index 1 = fake/AIGC
-            results.append({"image_path": p, "pred": round(prob_fake, 6)})
+            flag = "AI-generated" if prob_fake >= config.THRESHOLD else "real"
+            results.append({"image_path": p, "pred": round(prob_fake, 6), "flag": flag})
 
     with open(out_path, "w") as f:
         json.dump(results, f, indent=2)
