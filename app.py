@@ -24,7 +24,7 @@ def predict(image):
 
     target_layer = model.features[-1]
     cam = generate_heatmap(model, x, target_layer)
-    heatmap_img = overlay_heatmap(image.resize((x.shape[3], x.shape[2])), cam)
+    heatmap_img = overlay_heatmap(image.convert("RGB").resize((x.shape[3], x.shape[2])), cam)
 
     return labels, heatmap_img
 
