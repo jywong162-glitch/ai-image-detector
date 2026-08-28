@@ -14,6 +14,9 @@ sample_images/
 # NOTE: *.pth is intentionally NOT ignored here — the trained model.pth /
 # model_all.pth / model_baseline.pth are committed so the demo & grader work.
 
+# Gradio runtime data (flagged examples, caches)
+.gradio/
+
 # OS / editor
 .DS_Store
 .idea/
