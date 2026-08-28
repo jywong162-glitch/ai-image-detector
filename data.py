@@ -150,8 +150,11 @@ def get_dataloaders():
     train_ds = ImageFolderDataset(config.TRAIN_DIRS, train_transform())
     test_ds  = ImageFolderDataset(config.TEST_DIRS,  eval_transform())
     nw, pin = config.get_num_workers(), config.use_pin_memory()
-    train_dl = DataLoader(train_ds, batch_size=config.BATCH_SIZE, shuffle=True,  num_workers=nw, pin_memory=pin)
-    test_dl  = DataLoader(test_ds,  batch_size=config.BATCH_SIZE, shuffle=False, num_workers=nw, pin_memory=pin)
+    # With workers on, keep them alive between epochs and prefetch more batches —
+    # this hides the slow network-filesystem latency (our real bottleneck).
+    extra = {"persistent_workers": True, "prefetch_factor": 4} if nw > 0 else {}
+    train_dl = DataLoader(train_ds, batch_size=config.BATCH_SIZE, shuffle=True,  num_workers=nw, pin_memory=pin, **extra)
+    test_dl  = DataLoader(test_ds,  batch_size=config.BATCH_SIZE, shuffle=False, num_workers=nw, pin_memory=pin, **extra)
     return train_dl, test_dl
 
 
