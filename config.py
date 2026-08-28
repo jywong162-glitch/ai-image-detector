@@ -26,7 +26,11 @@ TRAIN_DIR = TRAIN_DIRS[0]
 TEST_DIR  = TEST_DIRS[0]
 
 # --- Model file (Person 1 produces this) ---
-MODEL_PATH = os.path.join(BASE, "model.pth")
+# Override which weights to load/save, e.g.  MODEL_PATH=model_cifake.pth python evaluate.py
+_mp = os.environ.get("MODEL_PATH")
+MODEL_PATH = (_mp if _mp and os.path.isabs(_mp)
+              else os.path.join(BASE, _mp) if _mp
+              else os.path.join(BASE, "model.pth"))
 
 # --- Image / label conventions (agreed by whole team) ---
 IMG_SIZE    = 224          # pretrained models expect ~224x224
