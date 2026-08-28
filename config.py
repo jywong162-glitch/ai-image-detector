@@ -21,9 +21,11 @@ MEAN = [0.485, 0.456, 0.406]
 STD  = [0.229, 0.224, 0.225]
 
 # --- Training knobs (Person 1 tunes these) ---
-BATCH_SIZE = 64
-EPOCHS     = 5
-LR         = 1e-4
+BATCH_SIZE  = 64
+EPOCHS      = 5
+LR          = 1e-4
+NUM_WORKERS = 0   # 0 = load data in main process. Keep 0 on macOS/Windows to avoid
+                  # DataLoader hangs. On Linux with a big dataset you can try 2-4.
 
 
 def get_device():
