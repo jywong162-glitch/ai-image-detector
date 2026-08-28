@@ -15,6 +15,8 @@ import os, sys
 from datasets import load_dataset
 
 N = int(sys.argv[1]) if len(sys.argv) > 1 else 6000   # images per class
+if N <= 0:
+    N = float("inf")                                  # pass 0 to import EVERYTHING
 OUT = "data_sid"
 EVERY_TEST = 10                                        # 1 in 10 -> test split
 
