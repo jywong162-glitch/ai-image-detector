@@ -5,6 +5,30 @@
 **Key idea:** train with random transformations (JPEG, blur, resize, noise, color
 jitter) so the detector stays accurate when images are mangled.
 
+## Final model: trained on CIFAKE + SID_Set (`model.pth` / `model_all.pth`)
+The CIFAKE-only model was robust but **did not generalise** — it scored ~98% on
+CIFAKE's tiny 32×32 test set yet confidently mislabelled real-world photos (e.g. a
+normal selfie read as "98% AI-generated"), because CIFAKE is entirely out-of-domain
+for full-resolution images. Retraining on **CIFAKE + a SID_Set subset** (real-world
+images) fixed this: the same selfie now correctly reads **"real"**, while robustness
+is preserved.
+
+### Robustness table — combined model (CIFAKE + SID_Set test sets)
+| Transformation | Accuracy |
+|---|---|
+| clean          | 98.54% |
+| jpeg_q90/70/50/30 | 98.52 / 98.45 / 98.46 / 98.36% |
+| blur_0.5/1.0/2.0  | 98.59 / 98.53 / 98.36% |
+| resize_0.5 / 0.25 | 98.54 / 91.99% |
+| noise_0.02/0.05/0.10 | 97.61 / 97.70 / 97.92% |
+| color_jitter      | 98.30% |
+| center_crop_80    | 87.22% |
+
+Best clean training accuracy: **98.55%**. Robustness holds under every transform except
+heavy crop (the known weak spot — crop was not in the training augmentations).
+
+
+
 ## Robustness table — baseline (no augmentation) vs ours (augmented)
 
 | Transformation | Baseline (no aug) | **Ours (augmented)** | Gap |
