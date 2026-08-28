@@ -97,8 +97,10 @@ python evaluate.py                    # robustness table (clean vs each transfor
 python predict_dir.py <img_dir> out.json   # required JSON output
 python app.py                         # web demo
 ```
-`model.pth` is **gitignored** (too big) — share it via Drive/Discord, drop it in the
-project root, and every other script picks it up automatically.
+**Trained weights are included in this repo:**
+- `model.pth` — the augmented, transformation-robust model (~98% on CIFAKE, stays ~98% under JPEG/blur/resize/noise). This is what `predict_dir.py` and `app.py` load by default.
+- `model_baseline.pth` — a no-augmentation baseline, for the robustness comparison.
+Evaluate either with `MODEL_PATH=model_baseline.pth python evaluate.py`.
 
 ---
 
