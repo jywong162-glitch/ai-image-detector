@@ -45,9 +45,10 @@ def toggle_flag(current_label):
     return gr.update(value=FLAG_RED, variant="stop")
 
 
-def reset_flag():
-    # Back to gray when the image is cleared or a new one is uploaded.
-    return gr.update(value=FLAG_DEFAULT, variant="secondary")
+def reset_all():
+    # Clear prediction + heatmap and reset the flag button when the image
+    # is cleared or a new one is uploaded — back to the initial state.
+    return None, None, gr.update(value=FLAG_DEFAULT, variant="secondary")
 
 
 with gr.Blocks(title="AI-Generated Image Detector") as demo:
@@ -67,8 +68,8 @@ with gr.Blocks(title="AI-Generated Image Detector") as demo:
 
     analyze.click(predict, inputs=inp, outputs=[out_label, out_heat, flag_btn])
     flag_btn.click(toggle_flag, inputs=flag_btn, outputs=flag_btn)
-    inp.clear(reset_flag, outputs=flag_btn)     # crossed out the image
-    inp.upload(reset_flag, outputs=flag_btn)    # uploaded a new image
+    inp.clear(reset_all, outputs=[out_label, out_heat, flag_btn])    # crossed out the image
+    inp.upload(reset_all, outputs=[out_label, out_heat, flag_btn])   # uploaded a new image
 
 
 if __name__ == "__main__":
