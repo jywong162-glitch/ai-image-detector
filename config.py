@@ -20,20 +20,32 @@ CLASS_NAMES = ["real", "fake"]   # index 0 = real, 1 = fake
 MEAN = [0.485, 0.456, 0.406]
 STD  = [0.229, 0.224, 0.225]
 
-# --- Training knobs (Person 1 tunes these) ---
-BATCH_SIZE  = 64
-EPOCHS      = 5
-LR          = 1e-4
-NUM_WORKERS = 0   # 0 = load data in main process. Keep 0 on macOS/Windows to avoid
-                  # DataLoader hangs. On Linux with a big dataset you can try 2-4.
+# --- Training knobs (override via env vars, no need to edit this file) ---
+#   e.g.  BATCH_SIZE=256 EPOCHS=5 python train.py
+BATCH_SIZE = int(os.environ.get("BATCH_SIZE", 64))
+EPOCHS     = int(os.environ.get("EPOCHS", 5))
+LR         = float(os.environ.get("LR", 1e-4))
 
 
 def get_device():
     """Pick the best available accelerator: NVIDIA GPU > Apple Silicon GPU > CPU."""
     import torch
     if torch.cuda.is_available():
-        return "cuda"                      # NVIDIA GPU (gaming laptop)
+        return "cuda"                      # NVIDIA GPU (RunPod 5090, gaming laptop)
     mps = getattr(torch.backends, "mps", None)
     if mps is not None and mps.is_available():
         return "mps"                       # Apple Silicon GPU (M1/M2/M3/M4 Mac)
     return "cpu"                           # no GPU (slow but works)
+
+
+def get_num_workers():
+    """DataLoader worker processes. Override with NUM_WORKERS env var.
+    Default: 8 on a CUDA box (feed the GPU fast), 0 on Mac/Windows (avoids hangs)."""
+    env = os.environ.get("NUM_WORKERS")
+    if env is not None:
+        return int(env)
+    return 8 if get_device() == "cuda" else 0
+
+
+def use_pin_memory():
+    return get_device() == "cuda"

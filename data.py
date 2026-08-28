@@ -140,8 +140,9 @@ class ImageFolderDataset(Dataset):
 def get_dataloaders():
     train_ds = ImageFolderDataset(config.TRAIN_DIR, train_transform())
     test_ds  = ImageFolderDataset(config.TEST_DIR,  eval_transform())
-    train_dl = DataLoader(train_ds, batch_size=config.BATCH_SIZE, shuffle=True,  num_workers=config.NUM_WORKERS)
-    test_dl  = DataLoader(test_ds,  batch_size=config.BATCH_SIZE, shuffle=False, num_workers=config.NUM_WORKERS)
+    nw, pin = config.get_num_workers(), config.use_pin_memory()
+    train_dl = DataLoader(train_ds, batch_size=config.BATCH_SIZE, shuffle=True,  num_workers=nw, pin_memory=pin)
+    test_dl  = DataLoader(test_ds,  batch_size=config.BATCH_SIZE, shuffle=False, num_workers=nw, pin_memory=pin)
     return train_dl, test_dl
 
 
