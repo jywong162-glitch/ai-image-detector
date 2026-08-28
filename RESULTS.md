@@ -64,9 +64,13 @@ MODEL_PATH=model_baseline.pth python evaluate.py   # baseline
   drives robustness.
 
 ## Error analysis
+- **Cross-generator gap (key false-negative mode).** The detector reliably flags AI images from
+  generators similar to its training data (Stable Diffusion v1.4 via CIFAKE, and SID_Set), but
+  **misses high-quality, photorealistic images from unseen modern generators** (e.g. Midjourney,
+  DALL·E 3, Flux, SDXL). Those generators leave different/fewer artifacts, so the model — like a
+  human — reads them as real. This is the central limitation and the main source of false negatives.
 - **Weak spot — center crop (both ~86–87%).** Our augmentation set did NOT include cropping,
-  so the model never learned crop invariance; both models degrade similarly. This is the honest
-  limitation of the current approach.
+  so the model never learned crop invariance; both models degrade similarly.
 - **False negatives** concentrate under aggressive crops and, for the baseline, under noise
   (where it essentially stops working).
 - **Trade-off:** we intentionally trained on the same transform families we test on. This proves
