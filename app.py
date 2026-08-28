@@ -70,6 +70,27 @@ TOOLTIP_CSS = """
     /* smooth ENTER: show immediately, fade/slide in */
     transition: opacity 180ms ease, transform 180ms ease, visibility 0s linear 0s;
 }
+
+/* box-name tooltips: hover the whole box. Positioned TOP-LEFT so they never
+   collide with the upload/camera/clipboard button tooltips at the bottom. */
+.tip-box { position: relative; }
+.tip-box::before {
+    position: absolute; top: 8px; left: 8px;
+    background: rgba(20,20,20,0.95); color: #fff;
+    padding: 5px 9px; border-radius: 6px; font-size: 12px;
+    white-space: nowrap; pointer-events: none; z-index: 50;
+    opacity: 0; visibility: hidden;
+    transform: translateY(4px) scale(0.96);
+    transition: opacity 180ms ease, transform 180ms ease, visibility 0s linear 180ms;
+}
+.tip-box:hover::before {
+    opacity: 1; visibility: visible;
+    transform: translateY(0) scale(1);
+    transition: opacity 180ms ease, transform 180ms ease, visibility 0s linear 0s;
+}
+#input-image::before { content: "Input image"; }
+#pred-box::before   { content: "Prediction"; }
+#heat-box::before   { content: "Grad-CAM heatmap"; }
 """
 
 with gr.Blocks(title="AI-Generated Image Detector") as demo:
@@ -80,11 +101,11 @@ with gr.Blocks(title="AI-Generated Image Detector") as demo:
     )
     with gr.Row():
         with gr.Column():
-            inp = gr.Image(type="pil", label="Input image", elem_id="input-image")
+            inp = gr.Image(type="pil", show_label=False, elem_id="input-image", elem_classes="tip-box")
             analyze = gr.Button("Analyze", variant="primary")
         with gr.Column():
-            out_label = gr.Label(num_top_classes=2, label="Prediction")
-            out_heat = gr.Image(type="pil", label="Grad-CAM heatmap")
+            out_label = gr.Label(num_top_classes=2, show_label=False, elem_id="pred-box", elem_classes="tip-box")
+            out_heat = gr.Image(type="pil", show_label=False, elem_id="heat-box", elem_classes="tip-box")
             flag_btn = gr.Button(FLAG_DEFAULT, variant="secondary")
 
     analyze.click(predict, inputs=inp, outputs=[out_label, out_heat, flag_btn])
