@@ -51,7 +51,25 @@ def reset_all():
     return None, None, gr.update(value=FLAG_DEFAULT, variant="secondary")
 
 
-with gr.Blocks(title="AI-Generated Image Detector") as demo:
+TOOLTIP_CSS = """
+#input-image button[aria-label] { position: relative; overflow: visible; }
+#input-image button[aria-label]::after {
+    content: attr(aria-label);
+    position: absolute; top: 125%; left: 50%;
+    background: rgba(20,20,20,0.95); color: #fff;
+    padding: 5px 9px; border-radius: 6px; font-size: 12px;
+    white-space: nowrap; pointer-events: none; z-index: 9999;
+    opacity: 0; visibility: hidden;
+    transform: translateX(-50%) translateY(-4px) scale(0.96);
+    transition: opacity 180ms ease, transform 180ms ease, visibility 180ms;
+}
+#input-image button[aria-label]:hover::after {
+    opacity: 1; visibility: visible;
+    transform: translateX(-50%) translateY(0) scale(1);
+}
+"""
+
+with gr.Blocks(title="AI-Generated Image Detector", css=TOOLTIP_CSS) as demo:
     gr.Markdown(
         "# AI-Generated Image Detector\n"
         "Upload an image — the model estimates **real vs AI-generated** and highlights the "
@@ -59,7 +77,7 @@ with gr.Blocks(title="AI-Generated Image Detector") as demo:
     )
     with gr.Row():
         with gr.Column():
-            inp = gr.Image(type="pil", label="Input image")
+            inp = gr.Image(type="pil", label="Input image", elem_id="input-image")
             analyze = gr.Button("Analyze", variant="primary")
         with gr.Column():
             out_label = gr.Label(num_top_classes=2, label="Prediction")
