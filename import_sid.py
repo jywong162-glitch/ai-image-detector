@@ -4,7 +4,8 @@ multi-GB dataset). Saves into data_sid/{train,test}/{real,fake} so it plugs
 straight into DATA_ROOTS.
 
 SID_Set labels (per the dataset card): 0 = real, 1 = fully synthetic,
-2 = tampered. We map 0 -> real, 1 -> fake, and skip 2 for a clean signal.
+2 = tampered (partially AI-edited). We map 0 -> real, and BOTH 1 and 2 -> fake,
+so the model also learns to flag half-real / partially-edited images.
 
 Usage:
   python -m pip install -U datasets
@@ -37,7 +38,10 @@ def main():
             print("[import_sid] ERROR: no 'image' key — paste the keys above to me.")
             return
         label = ex.get("label")
-        cls = "real" if label == 0 else "fake" if label == 1 else None
+        # 0 = real, 1 = fully synthetic, 2 = tampered (partially AI-edited).
+        # Treat BOTH 1 and 2 as "fake" so the model also learns to flag
+        # half-real / partially-edited images, not just fully-generated ones.
+        cls = "real" if label == 0 else "fake" if label in (1, 2) else None
         if cls is None or counts[cls] >= N:
             if counts["real"] >= N and counts["fake"] >= N:
                 break
