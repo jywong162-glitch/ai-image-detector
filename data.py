@@ -127,12 +127,16 @@ class ImageFolderDataset(Dataset):
         if isinstance(roots, str):
             roots = [roots]
         self.samples, self.transform = [], transform
+        cap = config.MAX_PER_ROOT
         for root in roots:
             for label, name in enumerate(config.CLASS_NAMES):  # real=0, fake=1
                 folder = os.path.join(root, name)
                 if not os.path.isdir(folder):                  # accept REAL/FAKE too
                     folder = os.path.join(root, name.upper())
-                for path in glob.glob(os.path.join(folder, "*")):
+                paths = glob.glob(os.path.join(folder, "*"))
+                if cap:                                        # balance datasets
+                    paths = sorted(paths)[:cap]
+                for path in paths:
                     self.samples.append((path, label))
         if not self.samples:
             print(f"[data] WARNING: no images found under {roots} — download the dataset first.")

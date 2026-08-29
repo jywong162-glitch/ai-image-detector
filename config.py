@@ -52,6 +52,10 @@ BATCH_SIZE = int(os.environ.get("BATCH_SIZE", 64))
 EPOCHS     = int(os.environ.get("EPOCHS", 5))
 LR         = float(os.environ.get("LR", 1e-4))
 
+# Cap images per class PER DATASET so no single dataset dominates (0 = no cap).
+# Use this to BALANCE datasets for an all-rounder, e.g. MAX_PER_ROOT=15000.
+MAX_PER_ROOT = int(os.environ.get("MAX_PER_ROOT", 0))
+
 
 def get_device():
     """Pick the best available accelerator: NVIDIA GPU > Apple Silicon GPU > CPU."""
