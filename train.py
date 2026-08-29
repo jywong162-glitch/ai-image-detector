@@ -8,6 +8,8 @@ seen so far every epoch, so an interrupted run still leaves a usable model.pth.
 Run:                python train.py
 Tune without edits: BATCH_SIZE=256 EPOCHS=5 NUM_WORKERS=8 python train.py
 """
+import os
+
 import torch
 import torch.nn as nn
 from tqdm import tqdm
@@ -32,6 +34,14 @@ def main():
           f"batches/epoch={len(train_dl)}  epochs={config.EPOCHS}")
 
     model = build_model(pretrained=True).to(device)
+
+    # Continue training from an existing checkpoint (fine-tuning) if RESUME is set.
+    #   RESUME=model_all.pth ... python train.py
+    resume = os.environ.get("RESUME")
+    if resume:
+        model.load_state_dict(torch.load(resume, map_location=device))
+        print(f"[train] RESUMED from checkpoint: {resume}")
+
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=config.LR)
     scaler = torch.amp.GradScaler(amp_device, enabled=use_amp)
