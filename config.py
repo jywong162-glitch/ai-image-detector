@@ -30,7 +30,7 @@ TEST_DIR  = TEST_DIRS[0]
 _mp = os.environ.get("MODEL_PATH")
 MODEL_PATH = (_mp if _mp and os.path.isabs(_mp)
               else os.path.join(BASE, _mp) if _mp
-              else os.path.join(BASE, "model.pth"))
+              else os.path.join(BASE, "model_v3.pth"))
 
 # --- Image / label conventions (agreed by whole team) ---
 IMG_SIZE    = 224          # pretrained models expect ~224x224
