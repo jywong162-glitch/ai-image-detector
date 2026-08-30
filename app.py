@@ -35,7 +35,18 @@ def predict(image):
     flagged = prob_fake >= config.THRESHOLD
     btn = gr.update(value=FLAG_RED if flagged else FLAG_DEFAULT,
                     variant="stop" if flagged else "secondary")
-    return labels, heatmap_img, btn
+    # Grad-CAM explains the model's highest-scoring class (see gradcam.py), which
+    # can differ from the configurable flag threshold.
+    predicted_class = "AI-generated" if int(probs.argmax()) == 1 else "real"
+    heatmap_text = (
+        f"### How to read this heatmap\n"
+        f"The model predicted **{predicted_class}**. "
+        f"**Red and yellow** areas had the strongest influence on that prediction, "
+        f"**green** areas had some influence, and **blue** areas had little influence.\n\n"
+        f"> The heatmap shows where the model focused. It does not prove that a specific "
+        f"part of the image was created or edited by AI."
+    )
+    return labels, heatmap_img, heatmap_text, btn
 
 
 def toggle_flag(current_label):
@@ -48,7 +59,7 @@ def toggle_flag(current_label):
 def reset_all():
     # Clear prediction + heatmap and reset the flag button when the image
     # is cleared or a new one is uploaded — back to the initial state.
-    return None, None, gr.update(value=FLAG_DEFAULT, variant="secondary")
+    return None, None, "", gr.update(value=FLAG_DEFAULT, variant="secondary")
 
 
 TOOLTIP_CSS = """
@@ -106,12 +117,13 @@ with gr.Blocks(title="AI-Generated Image Detector") as demo:
         with gr.Column():
             out_label = gr.Label(num_top_classes=2, show_label=False, elem_id="pred-box", elem_classes="tip-box")
             out_heat = gr.Image(type="pil", show_label=False, elem_id="heat-box", elem_classes="tip-box")
+            heatmap_guide = gr.Markdown()
             flag_btn = gr.Button(FLAG_DEFAULT, variant="secondary")
 
-    analyze.click(predict, inputs=inp, outputs=[out_label, out_heat, flag_btn])
+    analyze.click(predict, inputs=inp, outputs=[out_label, out_heat, heatmap_guide, flag_btn])
     flag_btn.click(toggle_flag, inputs=flag_btn, outputs=flag_btn)
-    inp.clear(reset_all, outputs=[out_label, out_heat, flag_btn])    # crossed out the image
-    inp.upload(reset_all, outputs=[out_label, out_heat, flag_btn])   # uploaded a new image
+    inp.clear(reset_all, outputs=[out_label, out_heat, heatmap_guide, flag_btn])
+    inp.upload(reset_all, outputs=[out_label, out_heat, heatmap_guide, flag_btn])
 
 
 if __name__ == "__main__":

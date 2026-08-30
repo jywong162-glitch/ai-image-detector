@@ -94,6 +94,7 @@ Keep it out of `data/train` and `data/test`. Put it in `data/validation/` if you
 ```bash
 python train.py                       # produces model.pth (needs GPU/Mac ideally)
 python evaluate.py                    # robustness table (clean vs each transform)
+python error_analysis.py              # TP/TN/FP/FN, metrics, mistakes, confusion matrix
 python predict_dir.py <img_dir> out.json   # required JSON output
 python app.py                         # web demo
 ```
@@ -103,6 +104,10 @@ Tiny-GenImage (Midjourney + 6 other generators), and StyleGAN faces — equal
 amounts per dataset (see `MAX_PER_ROOT`). It's what `predict_dir.py` and `app.py`
 load by default. (Earlier models and the robustness ablation are documented in
 `RESULTS.md` and remain in git history.)
+
+Run error analysis on the final checkpoint with
+`MODEL_PATH=model_v3.pth python error_analysis.py`. By default it analyses clean
+test images. Add `ERROR_TRANSFORMS=all` to analyse every required transformation.
 
 ---
 
