@@ -12,11 +12,12 @@ one was, and the **advantages / disadvantages** of each, so we can justify our f
 | `model.pth` | EfficientNet-B0 | CIFAKE + SID | history only | early "generalizes to real photos" model |
 | `model_all.pth` | EfficientNet-B0 | all datasets combined | history only | broad but unbalanced |
 | `model_v2.pth` | EfficientNet-B0 | SID+tampered / Tiny-GenImage / faces | history only | adds Midjourney + edited images |
-| **`model_v3.pth`** | **EfficientNet-B0** | **balanced SID+GenImage+faces (no CIFAKE)** | **✅ default** | **the app default — fast + attention heatmap** |
-| **`model_clip.pth`** | **frozen CLIP ViT-L/14 + linear head** | **same balanced data as v3** | **✅** | **hard photorealistic fakes / unseen generators** |
+| **`model_v3.pth`** | **EfficientNet-B0** | **balanced SID+GenImage+faces (no CIFAKE)** | **✅ SHIPPED (default)** | **our final model — fast, robust, reliable on real images** |
+| `model_clip.pth` | frozen CLIP ViT-L/14 + linear head | same balanced data as v3 | ⚠️ experiment only | generalizes to unseen generators BUT over-flags real images → not shipped |
 
-> How to run each: default `python app.py` (or `run_app.bat`) loads **model_v3** with its
-> attention heatmap. `run_clip.bat` loads **model_clip** with a CLIP attention heatmap.
+> How to run: `python app.py` (or `run_app.bat`) loads our shipped **model_v3**.
+> `run_clip.bat` loads the experimental **model_clip** (kept for reference only — see its
+> false-positive limitation below).
 
 ---
 
@@ -51,6 +52,10 @@ only difference vs v3 is the **architecture / features**, not the data.
 - **Tiny checkpoint** (~8 KB) — we only save the linear head; CLIP weights download separately.
 
 **Disadvantages**
+- **Over-flags real images as AI-generated (too many false positives).** This is the deal-breaker:
+  in our testing the CLIP model marked a number of genuine real photos as fake. A detector that
+  cries "AI!" on real images isn't trustworthy, so we did **not** ship it as the default. This is
+  why `model_v3` is our final model and `model_clip` is kept only as a documented experiment.
 - **No gradient-based heatmap** (it's a transformer with no conv feature maps) — but it *does*
   get an attention heatmap via **attention rollout** (`clip_attention_rollout` in `heatmap.py`),
   which reads CLIP's own attention to show where it looked. Note this shows encoder attention,
@@ -79,14 +84,17 @@ We introduced `MAX_PER_ROOT` (cap images per dataset) to fix the imbalance, whic
 
 ---
 
-## Why we kept both v3 and CLIP
+## Which model we shipped, and why
 
-They're complementary:
+**We ship `model_v3` (EfficientNet).** It's fast, explainable, robust to real-world transforms,
+and — most importantly — **reliable on real images** (few false positives).
 
-- **model_v3** = fast, explainable (attention heatmap), strong on known generators → best for the **demo**.
-- **model_clip** = best at the **hard photorealistic / unseen-generator** cases the CNN misses,
-  and now also explainable via **attention rollout** → best for the **robustness story** the track
-  is about.
+We explored **`model_clip`** to close the cross-generator gap, and it *did* generalize better to
+unseen photorealistic generators. But it **over-flagged real images as AI-generated**, and a
+detector that mislabels real photos isn't trustworthy — so we kept `model_v3` as the default and
+retained `model_clip` in the repo only as a **documented experiment**.
 
-A natural future step is an **ensemble** (average both scores) to get CLIP's generalization
-*and* v3's speed/explainability, but each is usable on its own today.
+**What we'd do with more time:** calibrate the CLIP head's decision threshold, add more real
+images to its training, and/or **ensemble** the two models (average their scores) to get CLIP's
+generalization without the false positives. We ran out of time to land this, so we shipped the
+model we trust.

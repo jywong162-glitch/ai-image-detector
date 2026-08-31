@@ -11,15 +11,18 @@ color-shifted, or cropped (the way images get mangled when shared online).
 learns fingerprints that survive mangling.** That is why our detector stays robust
 under real-world transformations instead of only working on clean lab images.
 
-We ship **two complementary detectors**:
+## Our model
 
-| Model | What it is | Strength | Heatmap |
-|---|---|---|---|
-| **`model_v3.pth`** (default) | EfficientNet-B0 (~5M params) fine-tuned end-to-end | Fast, robust to transforms, strong on known generators | **Attention heatmap** (gradient-based) |
-| **`model_clip.pth`** | Frozen CLIP ViT-L/14 + a trained linear head | Best at **unseen / photorealistic** generators | **Attention heatmap** (CLIP attention rollout) |
+Our detector is **`model_v3.pth`** — an **EfficientNet-B0** (~5M params, well under the
+spec's 2B limit) fine-tuned end-to-end on our data. It's fast, robust to real-world
+transforms, and explainable via an attention heatmap. This is the default everywhere:
+`app.py`, `predict_dir.py`, and `evaluate.py` all load it automatically.
 
-Both stay well under the spec's 2B-parameter limit. See **`MODELS.md`** for the full
-advantages/disadvantages of every model we trained.
+> **Experimental — `model_clip.pth` (not the default).** We also built a research-y second
+> detector: a **frozen CLIP ViT-L/14 encoder + a small trained linear head**. It generalizes
+> better to *unseen* photorealistic generators, **but** we found it **over-flags real images as
+> AI-generated** (too many false positives), so we did **not** ship it as the default. We keep it
+> in the repo as a documented experiment — see `MODELS.md` for the full trade-off.
 
 ---
 
@@ -85,8 +88,8 @@ Combine several at once with `DATA_ROOTS="data_sid,data_genimage" python train.p
 
 - **Final `model_v3.pth`** is a balanced all-rounder trained on **SID_Set + Tiny-GenImage**
   (equal images per dataset via `MAX_PER_ROOT`, CIFAKE dropped because its 32×32 images
-  are out-of-domain for real photos). **`model_clip.pth`** uses the same data with a frozen
-  CLIP encoder + linear head.
+  are out-of-domain for real photos). The experimental `model_clip.pth` uses the same data
+  with a frozen CLIP encoder + linear head.
 - The import scripts **stream** the datasets, so they never download the full multi-GB archive.
 
 > **Do NOT train on the validation benchmark.** The COCO val2017 + DALL·E-Advanced subset is a
@@ -103,24 +106,19 @@ python predict_dir.py <img_dir> out.json   # required JSON output
 python app.py                              # web demo (model_v3 + attention heatmap)
 ```
 
-### Choosing the model at runtime
-- **EfficientNet (default):** `python app.py` — or double-click **`run_app.bat`**.
-  Loads `model_v3.pth` and shows the **attention heatmap**.
-- **CLIP:** double-click **`run_clip.bat`** — or set the env vars yourself:
-  ```bash
-  MODEL_ARCH=clip MODEL_PATH=model_clip.pth python app.py
-  ```
-  Loads `model_clip.pth` and shows the **CLIP attention-rollout** heatmap (also an attention heatmap).
-  (Requires `open_clip_torch`, in `requirements.txt`; the CLIP weights download on first run.)
-
-The same `MODEL_ARCH`/`MODEL_PATH` env vars work for `evaluate.py`, `error_analysis.py`,
-and `predict_dir.py`.
+### Running the app
+- **Default (our model):** `python app.py` — or double-click **`run_app.bat`**.
+  Loads `model_v3.pth` and shows the attention heatmap. **This is what you should use.**
+- **Experimental CLIP model (optional):** double-click **`run_clip.bat`** — or set the env vars
+  yourself: `MODEL_ARCH=clip MODEL_PATH=model_clip.pth python app.py`. Note its known
+  false-positive issue above; it's kept only for reference. (Requires `open_clip_torch`; the
+  CLIP weights download on first run.)
 
 ---
 
 ## Results & documentation
 - **`RESULTS.md`** — the robustness table (augmented vs baseline) and the error analysis.
-- **`MODELS.md`** — every model we trained, with advantages/disadvantages and why we shipped two.
+- **`MODELS.md`** — every model we trained, with advantages/disadvantages and why we shipped `model_v3`.
 - **`RUNPOD.md`** — how to train on a rented GPU, step by step.
 
 ---
@@ -134,7 +132,8 @@ and `predict_dir.py`.
 
 ## Limitations (honest)
 - **Cross-generator gap:** EfficientNet reliably flags generators similar to its training data
-  but misses some brand-new photorealistic generators — this is exactly why we added the CLIP
-  model, which generalizes far better to unseen generators.
+  but can miss some brand-new photorealistic generators. We explored a CLIP-based model to close
+  this gap; it generalized better to unseen generators **but over-flagged real images as fake**,
+  so we kept the reliable EfficientNet as our shipped model and documented CLIP as an experiment.
 - **Heavy center-crop** (~87%) is the weakest transform because crop was not in the training
   augmentations. Adding random-crop augmentation is the clearest next improvement.
