@@ -9,6 +9,8 @@ venv/
 data/
 data_*/
 predictions.json
+scores.json
+out.json
 sample_images/
 error_analysis/
 
