@@ -10,6 +10,7 @@ data/
 data_*/
 predictions.json
 sample_images/
+error_analysis/
 
 # NOTE: *.pth is intentionally NOT ignored here — the trained model.pth /
 # model_all.pth / model_baseline.pth are committed so the demo & grader work.
