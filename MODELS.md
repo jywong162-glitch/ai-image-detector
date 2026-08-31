@@ -51,7 +51,10 @@ only difference vs v3 is the **architecture / features**, not the data.
 - **Tiny checkpoint** (~8 KB) — we only save the linear head; CLIP weights download separately.
 
 **Disadvantages**
-- **No Grad-CAM.** It's a transformer with no conv feature maps, so the heatmap is disabled.
+- **No Grad-CAM** (it's a transformer with no conv feature maps) — but it *does* get a heatmap
+  via **attention rollout** (`clip_attention_rollout` in `gradcam.py`), which reads CLIP's own
+  attention to show where it looked. Note this shows encoder attention, not decision-specific
+  attribution like Grad-CAM.
 - **Heavier to run.** Needs the `open_clip_torch` package and downloads the ~1.7 GB CLIP model
   on first run; ~15–20 s to load and slower per image than EfficientNet.
 - Needs `MODEL_ARCH=clip` set at **both** train and inference time (that's what `run_clip.bat`
@@ -81,8 +84,9 @@ We introduced `MAX_PER_ROOT` (cap images per dataset) to fix the imbalance, whic
 They're complementary:
 
 - **model_v3** = fast, explainable (Grad-CAM), strong on known generators → best for the **demo**.
-- **model_clip** = best at the **hard photorealistic / unseen-generator** cases the CNN misses →
-  best for the **robustness story** the track is about.
+- **model_clip** = best at the **hard photorealistic / unseen-generator** cases the CNN misses,
+  and now also explainable via **attention rollout** → best for the **robustness story** the track
+  is about.
 
 A natural future step is an **ensemble** (average both scores) to get CLIP's generalization
 *and* v3's speed/explainability, but each is usable on its own today.

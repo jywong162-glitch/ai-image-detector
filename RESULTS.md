@@ -1,17 +1,22 @@
 # Robustness Results & Error Analysis
 
 **Task:** detect AI-generated vs real images, robustly under real-world transforms.
-**Model:** EfficientNet-B0 (~5M params, well under the 2B limit), fine-tuned on CIFAKE.
+**Model:** EfficientNet-B0 (~5M params, well under the 2B limit).
 **Key idea:** train with random transformations (JPEG, blur, resize, noise, color
 jitter) so the detector stays accurate when images are mangled.
 
-## Final model: trained on CIFAKE + SID_Set (`model.pth` / `model_all.pth`)
+> The robustness ablation below was run on the augmented EfficientNet. The **final
+> shipped models are `model_v3.pth` (balanced SID_Set + Tiny-GenImage) and
+> `model_clip.pth` (frozen CLIP + linear head)** — see `MODELS.md`. The augmentation
+> story and numbers here still apply; only the training mix was later rebalanced.
+
+## Why we moved past CIFAKE
 The CIFAKE-only model was robust but **did not generalise** — it scored ~98% on
 CIFAKE's tiny 32×32 test set yet confidently mislabelled real-world photos (e.g. a
 normal selfie read as "98% AI-generated"), because CIFAKE is entirely out-of-domain
-for full-resolution images. Retraining on **CIFAKE + a SID_Set subset** (real-world
-images) fixed this: the same selfie now correctly reads **"real"**, while robustness
-is preserved.
+for full-resolution images. Adding real-world datasets (**SID_Set**, then
+**Tiny-GenImage**) fixed this: the same selfie now correctly reads **"real"**, while
+robustness is preserved.
 
 ### Robustness table — combined model (CIFAKE + SID_Set test sets)
 | Transformation | Accuracy |
