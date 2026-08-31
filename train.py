@@ -25,6 +25,8 @@ def main():
     use_amp = (device == "cuda")
 
     print(f"[train] device = {device}  (cuda=NVIDIA, mps=Apple Silicon, cpu=no GPU)")
+    print(f"[train] model arch = {config.MODEL_ARCH}"
+          + ("  (frozen CLIP + linear head)" if config.MODEL_ARCH == "clip" else "  (EfficientNet-B0)"))
     if device == "cuda":
         torch.backends.cudnn.benchmark = True                 # faster fixed-size convs
         print(f"[train] GPU: {torch.cuda.get_device_name(0)}  |  mixed-precision: ON")
