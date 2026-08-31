@@ -10,7 +10,7 @@ import gradio as gr
 import config
 from data import eval_transform
 from model import load_model
-from gradcam import generate_heatmap, overlay_heatmap
+from gradcam import generate_heatmap, overlay_heatmap, clip_attention_rollout
 
 device = config.get_device()
 model = load_model(device)
@@ -45,9 +45,23 @@ def predict(image):
             f"> The heatmap shows where the model focused. It does not prove that a specific "
             f"part of the image was created or edited by AI."
         )
-    else:                            # CLIP model — no conv feature maps for Grad-CAM
-        heatmap_img = None
-        heatmap_text = "_Grad-CAM heatmap is not available for the CLIP model._"
+    else:                            # CLIP model — use attention rollout instead of Grad-CAM
+        predicted_class = "AI-generated" if int(probs.argmax()) == 1 else "real"
+        cam = clip_attention_rollout(model, x)
+        if cam is not None:
+            heatmap_img = overlay_heatmap(
+                image.convert("RGB").resize((x.shape[3], x.shape[2])), cam)
+            heatmap_text = (
+                f"### How to read this heatmap (CLIP attention)\n"
+                f"The model predicted **{predicted_class}**. This is an **attention-rollout** "
+                f"map (not Grad-CAM): **red and yellow** areas are the image patches CLIP "
+                f"attended to most, **green** some, **blue** little.\n\n"
+                f"> It shows where the model looked. It does not prove that a specific part of "
+                f"the image was created or edited by AI."
+            )
+        else:
+            heatmap_img = None
+            heatmap_text = "_Attention heatmap is not available for this CLIP build._"
     return labels, heatmap_img, heatmap_text, btn
 
 
