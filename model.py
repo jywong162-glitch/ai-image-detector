@@ -9,7 +9,40 @@ from torchvision import models
 import config
 
 
+class CLIPDetector(nn.Module):
+    """Frozen CLIP image encoder + a trainable linear head.
+
+    CLIP's features generalize across image generators much better than a
+    from-scratch CNN, so this catches photorealistic fakes an EfficientNet misses.
+    Only the head is trained; state_dict/load_state_dict handle ONLY the head, so
+    the saved file is tiny and CLIP is reloaded fresh (pretrained) each time.
+    """
+    def __init__(self):
+        super().__init__()
+        import open_clip
+        self.clip, _, _ = open_clip.create_model_and_transforms(
+            config.CLIP_MODEL, pretrained=config.CLIP_PRETRAINED)
+        for p in self.clip.parameters():
+            p.requires_grad = False
+        self.clip.eval()
+        self.head = nn.Linear(self.clip.visual.output_dim, config.NUM_CLASSES)
+
+    def forward(self, x):
+        with torch.no_grad():
+            feats = self.clip.encode_image(x).float()
+        return self.head(feats)
+
+    # Persist ONLY the trainable head (keeps the .pth tiny).
+    def state_dict(self, *args, **kwargs):
+        return self.head.state_dict(*args, **kwargs)
+
+    def load_state_dict(self, state_dict, *args, **kwargs):
+        return self.head.load_state_dict(state_dict, *args, **kwargs)
+
+
 def build_model(pretrained=True):
+    if config.MODEL_ARCH == "clip":
+        return CLIPDetector()
     weights = models.EfficientNet_B0_Weights.DEFAULT if pretrained else None
     model = models.efficientnet_b0(weights=weights)
     in_features = model.classifier[1].in_features

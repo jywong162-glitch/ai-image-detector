@@ -76,6 +76,7 @@ def train_transform():
     baseline collapses under transforms, augmented model stays flat)."""
     if os.environ.get("AUGMENT", "1") == "0":
         return eval_transform()          # clean only — the weak baseline
+    mean, std = config.get_norm()
     return T.Compose([
         T.Resize((config.IMG_SIZE, config.IMG_SIZE)),
         RandomJPEG(quality_range=(30, 90), p=0.5),
@@ -85,7 +86,7 @@ def train_transform():
         T.RandomApply([T.ColorJitter(0.2, 0.2, 0.2, 0.0)], p=0.3),   # +-20%
         T.RandomHorizontalFlip(),
         T.ToTensor(),
-        T.Normalize(config.MEAN, config.STD),
+        T.Normalize(mean, std),
     ])
 
 
@@ -94,7 +95,8 @@ def eval_transform(corruption=None):
     ops = [T.Resize((config.IMG_SIZE, config.IMG_SIZE))]
     if corruption is not None:
         ops.append(corruption)
-    ops += [T.ToTensor(), T.Normalize(config.MEAN, config.STD)]
+    mean, std = config.get_norm()
+    ops += [T.ToTensor(), T.Normalize(mean, std)]
     return T.Compose(ops)
 
 

@@ -46,6 +46,23 @@ THRESHOLD = float(os.environ.get("THRESHOLD", 0.5))
 MEAN = [0.485, 0.456, 0.406]
 STD  = [0.229, 0.224, 0.225]
 
+# --- Model architecture ---
+# "efficientnet" (default) or "clip" (frozen CLIP encoder + linear head — far
+# better cross-generator generalization for photorealistic fakes).
+#   MODEL_ARCH=clip ... python train.py     (use the SAME env at inference too!)
+MODEL_ARCH      = os.environ.get("MODEL_ARCH", "efficientnet")
+CLIP_MODEL      = os.environ.get("CLIP_MODEL", "ViT-L-14")
+CLIP_PRETRAINED = os.environ.get("CLIP_PRETRAINED", "openai")
+
+# CLIP uses its own normalization (different from ImageNet).
+CLIP_MEAN = [0.48145466, 0.4578275, 0.40821073]
+CLIP_STD  = [0.26862954, 0.26130258, 0.27577711]
+
+
+def get_norm():
+    """Return the (mean, std) matching the current architecture."""
+    return (CLIP_MEAN, CLIP_STD) if MODEL_ARCH == "clip" else (MEAN, STD)
+
 # --- Training knobs (override via env vars, no need to edit this file) ---
 #   e.g.  BATCH_SIZE=256 EPOCHS=5 python train.py
 BATCH_SIZE = int(os.environ.get("BATCH_SIZE", 64))

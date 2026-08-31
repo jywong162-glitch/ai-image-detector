@@ -10,3 +10,4 @@ tqdm
 scikit-learn
 gradio
 opencv-python-headless
+open_clip_torch   # only needed for the CLIP model (MODEL_ARCH=clip)
