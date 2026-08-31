@@ -1,6 +1,6 @@
 """
 PERSON 4 OWNS THIS FILE.
-Drag-and-drop demo: upload an image -> real/AI-generated + Grad-CAM heatmap,
+Drag-and-drop demo: upload an image -> real/AI-generated + attention heatmap,
 plus a "Flag as AI-generated" button that turns RED when clicked.
 Run:  python app.py   then open the local URL it prints.
 """
@@ -10,7 +10,7 @@ import gradio as gr
 import config
 from data import eval_transform
 from model import load_model
-from gradcam import generate_heatmap, overlay_heatmap, clip_attention_rollout
+from heatmap import generate_heatmap, overlay_heatmap, clip_attention_rollout
 
 device = config.get_device()
 model = load_model(device)
@@ -32,7 +32,7 @@ def predict(image):
     btn = gr.update(value=FLAG_RED if flagged else FLAG_DEFAULT,
                     variant="stop" if flagged else "secondary")
 
-    if hasattr(model, "features"):   # EfficientNet supports Grad-CAM; CLIP does not
+    if hasattr(model, "features"):   # EfficientNet: gradient-based heatmap; CLIP: attention rollout
         target_layer = model.features[-1]
         cam = generate_heatmap(model, x, target_layer)
         heatmap_img = overlay_heatmap(image.convert("RGB").resize((x.shape[3], x.shape[2])), cam)
@@ -45,7 +45,7 @@ def predict(image):
             f"> The heatmap shows where the model focused. It does not prove that a specific "
             f"part of the image was created or edited by AI."
         )
-    else:                            # CLIP model — use attention rollout instead of Grad-CAM
+    else:                            # CLIP model — attention-rollout heatmap
         predicted_class = "AI-generated" if int(probs.argmax()) == 1 else "real"
         cam = clip_attention_rollout(model, x)
         if cam is not None:
@@ -54,7 +54,7 @@ def predict(image):
             heatmap_text = (
                 f"### How to read this heatmap (CLIP attention)\n"
                 f"The model predicted **{predicted_class}**. This is an **attention-rollout** "
-                f"map (not Grad-CAM): **red and yellow** areas are the image patches CLIP "
+                f"map: **red and yellow** areas are the image patches CLIP "
                 f"attended to most, **green** some, **blue** little.\n\n"
                 f"> It shows where the model looked. It does not prove that a specific part of "
                 f"the image was created or edited by AI."
@@ -117,14 +117,14 @@ TOOLTIP_CSS = """
 }
 #input-image::before { content: "Input image"; }
 #pred-box::before   { content: "Prediction"; }
-#heat-box::before   { content: "Grad-CAM heatmap"; }
+#heat-box::before   { content: "Attention heatmap"; }
 """
 
 with gr.Blocks(title="AI-Generated Image Detector") as demo:
     gr.Markdown(
         "# AI-Generated Image Detector\n"
         "Upload an image — the model estimates **real vs AI-generated** and highlights the "
-        "regions it focused on (Grad-CAM). Click **Flag as AI-generated** to mark it (turns red)."
+        "regions it focused on (attention heatmap). Click **Flag as AI-generated** to mark it (turns red)."
     )
     with gr.Row():
         with gr.Column():

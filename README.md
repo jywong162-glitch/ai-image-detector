@@ -15,8 +15,8 @@ We ship **two complementary detectors**:
 
 | Model | What it is | Strength | Heatmap |
 |---|---|---|---|
-| **`model_v3.pth`** (default) | EfficientNet-B0 (~5M params) fine-tuned end-to-end | Fast, robust to transforms, strong on known generators | **Grad-CAM** |
-| **`model_clip.pth`** | Frozen CLIP ViT-L/14 + a trained linear head | Best at **unseen / photorealistic** generators | **CLIP attention rollout** |
+| **`model_v3.pth`** (default) | EfficientNet-B0 (~5M params) fine-tuned end-to-end | Fast, robust to transforms, strong on known generators | **Attention heatmap** (gradient-based) |
+| **`model_clip.pth`** | Frozen CLIP ViT-L/14 + a trained linear head | Best at **unseen / photorealistic** generators | **Attention heatmap** (CLIP attention rollout) |
 
 Both stay well under the spec's 2B-parameter limit. See **`MODELS.md`** for the full
 advantages/disadvantages of every model we trained.
@@ -45,7 +45,7 @@ advantages/disadvantages of every model we trained.
 | `evaluate.py` | Prints the **robustness table**: accuracy clean vs each transformation |
 | `error_analysis.py` | TP/TN/FP/FN, precision/recall, confusion matrix, example mistakes |
 | `predict_dir.py` | **Required deliverable**: image folder → JSON of `image_path` + `pred` |
-| `gradcam.py` | Grad-CAM (EfficientNet) + attention-rollout heatmap (CLIP) |
+| `heatmap.py` | Attention heatmaps: gradient-based (EfficientNet) + attention rollout (CLIP) |
 | `app.py` | Gradio drag-and-drop web demo with the heatmap |
 | `import_sid.py`, `import_genimage.py` | Stream + subset the training datasets |
 | `run_app.bat` / `run_clip.bat` | Double-click launchers (EfficientNet / CLIP) |
@@ -100,17 +100,17 @@ python train.py                            # train a model (needs GPU/Mac ideall
 python evaluate.py                         # robustness table (clean vs each transform)
 python error_analysis.py                   # TP/TN/FP/FN, metrics, confusion matrix
 python predict_dir.py <img_dir> out.json   # required JSON output
-python app.py                              # web demo (model_v3 + Grad-CAM)
+python app.py                              # web demo (model_v3 + attention heatmap)
 ```
 
 ### Choosing the model at runtime
 - **EfficientNet (default):** `python app.py` — or double-click **`run_app.bat`**.
-  Loads `model_v3.pth` and shows the **Grad-CAM** heatmap.
+  Loads `model_v3.pth` and shows the **attention heatmap**.
 - **CLIP:** double-click **`run_clip.bat`** — or set the env vars yourself:
   ```bash
   MODEL_ARCH=clip MODEL_PATH=model_clip.pth python app.py
   ```
-  Loads `model_clip.pth` and shows the **CLIP attention-rollout** heatmap.
+  Loads `model_clip.pth` and shows the **CLIP attention-rollout** heatmap (also an attention heatmap).
   (Requires `open_clip_torch`, in `requirements.txt`; the CLIP weights download on first run.)
 
 The same `MODEL_ARCH`/`MODEL_PATH` env vars work for `evaluate.py`, `error_analysis.py`,
@@ -121,7 +121,6 @@ and `predict_dir.py`.
 ## Results & documentation
 - **`RESULTS.md`** — the robustness table (augmented vs baseline) and the error analysis.
 - **`MODELS.md`** — every model we trained, with advantages/disadvantages and why we shipped two.
-- **`DEMO_SCRIPT.md`** — narration script for the demo video.
 - **`RUNPOD.md`** — how to train on a rented GPU, step by step.
 
 ---

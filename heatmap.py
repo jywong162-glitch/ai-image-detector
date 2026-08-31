@@ -5,7 +5,8 @@ from PIL import Image
 
 def generate_heatmap(model, input_tensor, target_layer):
     """
-    Generates a Grad-CAM heatmap for the input image.
+    Generates a gradient-based class-activation heatmap (for the EfficientNet
+    model, which has conv feature maps).
     """
     model.eval()
     gradients = []
@@ -31,7 +32,7 @@ def generate_heatmap(model, input_tensor, target_layer):
 
     handle.remove()
 
-    # Calculate Grad-CAM
+    # Calculate the class-activation map
     grads = gradients[0].detach().cpu().numpy()[0]
     f_maps = activations[0].detach().cpu().numpy()[0]
     weights = np.mean(grads, axis=(1, 2))
@@ -51,7 +52,8 @@ def clip_attention_rollout(clip_detector, input_tensor):
     """
     'Where did CLIP look?' heatmap for the frozen-CLIP model.
 
-    CLIP is a Vision Transformer, so it has no conv feature map for Grad-CAM.
+    CLIP is a Vision Transformer, so it has no conv feature map for a
+    gradient-based heatmap.
     Instead we use **attention rollout** (Abnar & Zuidema, 2020): capture the
     self-attention weights from every transformer block, add the residual
     connection, and multiply them together to trace how much each image patch

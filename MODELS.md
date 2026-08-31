@@ -12,11 +12,11 @@ one was, and the **advantages / disadvantages** of each, so we can justify our f
 | `model.pth` | EfficientNet-B0 | CIFAKE + SID | history only | early "generalizes to real photos" model |
 | `model_all.pth` | EfficientNet-B0 | all datasets combined | history only | broad but unbalanced |
 | `model_v2.pth` | EfficientNet-B0 | SID+tampered / Tiny-GenImage / faces | history only | adds Midjourney + edited images |
-| **`model_v3.pth`** | **EfficientNet-B0** | **balanced SID+GenImage+faces (no CIFAKE)** | **✅ default** | **the app default — fast + Grad-CAM** |
+| **`model_v3.pth`** | **EfficientNet-B0** | **balanced SID+GenImage+faces (no CIFAKE)** | **✅ default** | **the app default — fast + attention heatmap** |
 | **`model_clip.pth`** | **frozen CLIP ViT-L/14 + linear head** | **same balanced data as v3** | **✅** | **hard photorealistic fakes / unseen generators** |
 
-> How to run each: default `python app.py` (or `run_app.bat`) loads **model_v3** with Grad-CAM.
-> `run_clip.bat` loads **model_clip** (no Grad-CAM).
+> How to run each: default `python app.py` (or `run_app.bat`) loads **model_v3** with its
+> attention heatmap. `run_clip.bat` loads **model_clip** with a CLIP attention heatmap.
 
 ---
 
@@ -28,8 +28,8 @@ datasets (CIFAKE dropped because it was too easy/synthetic and skewed results).
 
 **Advantages**
 - **Fast + tiny** (~16 MB, runs on CPU in real time) — great for a live demo.
-- **Supports Grad-CAM** — it has conv feature maps, so the app can show a heatmap of where
-  the model "looked." Good for explainability in the write-up.
+- **Supports a gradient-based attention heatmap** — it has conv feature maps, so the app can
+  show a heatmap of where the model "looked." Good for explainability in the write-up.
 - **Strong on generators it saw during training** and on real photos (low false positives).
 
 **Disadvantages**
@@ -51,10 +51,10 @@ only difference vs v3 is the **architecture / features**, not the data.
 - **Tiny checkpoint** (~8 KB) — we only save the linear head; CLIP weights download separately.
 
 **Disadvantages**
-- **No Grad-CAM** (it's a transformer with no conv feature maps) — but it *does* get a heatmap
-  via **attention rollout** (`clip_attention_rollout` in `gradcam.py`), which reads CLIP's own
-  attention to show where it looked. Note this shows encoder attention, not decision-specific
-  attribution like Grad-CAM.
+- **No gradient-based heatmap** (it's a transformer with no conv feature maps) — but it *does*
+  get an attention heatmap via **attention rollout** (`clip_attention_rollout` in `heatmap.py`),
+  which reads CLIP's own attention to show where it looked. Note this shows encoder attention,
+  not decision-specific attribution.
 - **Heavier to run.** Needs the `open_clip_torch` package and downloads the ~1.7 GB CLIP model
   on first run; ~15–20 s to load and slower per image than EfficientNet.
 - Needs `MODEL_ARCH=clip` set at **both** train and inference time (that's what `run_clip.bat`
@@ -83,7 +83,7 @@ We introduced `MAX_PER_ROOT` (cap images per dataset) to fix the imbalance, whic
 
 They're complementary:
 
-- **model_v3** = fast, explainable (Grad-CAM), strong on known generators → best for the **demo**.
+- **model_v3** = fast, explainable (attention heatmap), strong on known generators → best for the **demo**.
 - **model_clip** = best at the **hard photorealistic / unseen-generator** cases the CNN misses,
   and now also explainable via **attention rollout** → best for the **robustness story** the track
   is about.
