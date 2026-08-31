@@ -27,25 +27,27 @@ def predict(image):
     prob_fake = float(probs[1])
     labels = {"real": float(probs[0]), "AI-generated": prob_fake}
 
-    target_layer = model.features[-1]
-    cam = generate_heatmap(model, x, target_layer)
-    heatmap_img = overlay_heatmap(image.convert("RGB").resize((x.shape[3], x.shape[2])), cam)
-
     # If the model itself is above the threshold, pre-flag the button red.
     flagged = prob_fake >= config.THRESHOLD
     btn = gr.update(value=FLAG_RED if flagged else FLAG_DEFAULT,
                     variant="stop" if flagged else "secondary")
-    # Grad-CAM explains the model's highest-scoring class (see gradcam.py), which
-    # can differ from the configurable flag threshold.
-    predicted_class = "AI-generated" if int(probs.argmax()) == 1 else "real"
-    heatmap_text = (
-        f"### How to read this heatmap\n"
-        f"The model predicted **{predicted_class}**. "
-        f"**Red and yellow** areas had the strongest influence on that prediction, "
-        f"**green** areas had some influence, and **blue** areas had little influence.\n\n"
-        f"> The heatmap shows where the model focused. It does not prove that a specific "
-        f"part of the image was created or edited by AI."
-    )
+
+    if hasattr(model, "features"):   # EfficientNet supports Grad-CAM; CLIP does not
+        target_layer = model.features[-1]
+        cam = generate_heatmap(model, x, target_layer)
+        heatmap_img = overlay_heatmap(image.convert("RGB").resize((x.shape[3], x.shape[2])), cam)
+        predicted_class = "AI-generated" if int(probs.argmax()) == 1 else "real"
+        heatmap_text = (
+            f"### How to read this heatmap\n"
+            f"The model predicted **{predicted_class}**. "
+            f"**Red and yellow** areas had the strongest influence on that prediction, "
+            f"**green** areas had some influence, and **blue** areas had little influence.\n\n"
+            f"> The heatmap shows where the model focused. It does not prove that a specific "
+            f"part of the image was created or edited by AI."
+        )
+    else:                            # CLIP model — no conv feature maps for Grad-CAM
+        heatmap_img = None
+        heatmap_text = "_Grad-CAM heatmap is not available for the CLIP model._"
     return labels, heatmap_img, heatmap_text, btn
 
 
